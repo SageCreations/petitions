@@ -1,0 +1,12 @@
+{
+  "petitions": [
+    {
+      "petition_id": "pet123",
+      "petitioner's_name": "John Doe",
+      "petition's_description": "A call to action to protect our rainforests from deforestation...",
+      "createdAt": "2025-02-01T10:00:00Z",
+      "updatedAt": "2025-02-01T10:00:00Z"
+    },
+    {}
+  ]
+}

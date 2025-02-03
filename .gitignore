@@ -1,0 +1,19 @@
+main
+*.exe
+ols.json
+bin/
+petitions
+data/database.json
+react-views/build
+react-views/node_modules
+
+# All sub-level build binaries
+*/**/*
+!*/**/*/
+!*/**/*.*
+
+# Common editor/system specific metadata
+.DS_Store
+.idea/
+.vscode/
+*.iml
