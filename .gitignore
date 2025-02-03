@@ -17,3 +17,5 @@ react-views/node_modules
 .idea/
 .vscode/
 *.iml
+.venv/
+*/__pycache__/*
