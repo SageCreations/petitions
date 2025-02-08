@@ -4,9 +4,12 @@ import ui "webui"
 import "base:runtime"
 import "core:fmt"
 import "core:os"
+import "core:time"
 import "core:time/datetime"
 import "core:strings"
 import "core:encoding/json"
+import "core:crypto"
+import "core:encoding/uuid"
 
 
 // == Structures ==============================================================
@@ -16,8 +19,26 @@ Petition :: struct {
     id:         string,
     name:       string,
     desc:       string,
-    created_at: datetime.DateTime,
-    updated_at: datetime.DateTime,
+    created_at: time.Time,
+    updated_at: time.Time,
+}
+
+create_petition :: proc(new_name: string, new_desc: string) -> Petition {
+    uuid_identifier := uuid.generate_v7_with_counter(u16(len(database_context)))
+    new_uuid, _ := uuid.to_string(uuid_identifier, context.temp_allocator)
+    new_time := time.now()
+    return Petition {
+        id          = new_uuid,
+        name        = new_name,
+        desc        = new_desc,
+        created_at  = new_time,
+        updated_at  = new_time,
+    }
+}
+
+update_petition :: proc(petition: ^Petition) {
+    // TODO: make it where I can pass in args inside of {} to change stuff
+    petition.updated_at = time.now()
 }
 
 
@@ -105,8 +126,23 @@ GetPetitionByID :: proc(petition_id: string) -> Petition {
 // create_petition(petition_data)
 //  accepts a dictionary with the petitioner's data, generates a unique ID and timestamps,
 //  then appends it to the database.
-CreatePetition :: proc(petition: Petition) {
-    map_insert(&database_context, petition.id, petition)
+CreatePetition :: proc(new_name: string, new_desc: string) {
+    // This scope will have a CSPRNG.
+    context.random_generator = crypto.random_generator()
+
+    uuid_identifier := uuid.generate_v7_with_counter(u16(len(database_context)))
+    new_uuid, _ := uuid.to_string(uuid_identifier, context.temp_allocator)
+    new_time := time.now()
+    new_petition := Petition {
+        id          = new_uuid,
+        name        = new_name,
+        desc        = new_desc,
+        created_at  = new_time,
+        updated_at  = new_time,
+    }
+
+    map_insert(&database_context, new_petition.id, new_petition)
+    fmt.printfln("database: %v", database_context)
 }
 
 // update_petition(petition_id, update_data)
@@ -137,9 +173,7 @@ events :: proc "c" (e: ^ui.Event) {
     switch e.event_type {
     case .Connected:
         fmt.println("Connected.")
-        // TODO: trying to call js from backend, .ts being compiled to js files
-        ui.run(e.window, "hello();")
-        ui.script(e.window, "hello();")
+        ui.run(e.window, "MyLib.anotherFunction();")
     case .Disconnected:
         fmt.println("Disconnected.")
     case .MouseClick:
@@ -171,6 +205,41 @@ close_window :: proc "c" (e: ^ui.Event) {
     ui.close(e.window)
 }
 
+test_msg :: proc "c" (e: ^ui.Event) {
+    context = runtime.default_context()
+    // TODO: trying to call js from backend, .ts being compiled to js files
+    //ui.run(e.window, "hello();")
+    ui.run(e.window, "MyLib.hello();")
+}
+
+create_petition_cb :: proc "c" (e: ^ui.Event) {
+    context = runtime.default_context()
+    Data :: struct {
+        name: string,
+        desc: string,
+    }
+
+    // get the data from the front end
+    data, _ := ui.get_arg(Data, e)
+    fmt.printfln("data: %V",data)
+
+    // create a new petition
+    CreatePetition(data.name, data.desc)
+}
+
+get_petition_list_cb :: proc "c" (e: ^ui.Event) {
+    context = runtime.default_context()
+    fmt.printfln("getPetitions() was called")
+
+    json_data, json_err := json.marshal(GetAllPetitions(), {spec = .JSON5, pretty = true})
+    if json_err != nil {
+        fmt.printfln("Unable to marshal petition list: %v", json_err)
+    }
+    resp: string = strings.clone_from_bytes(json_data)
+
+    ui.run(e.window, fmt.tprintf("MyLib.displayPetitions(%s);", resp))
+}
+
 
 // ============================================================================
 
@@ -181,25 +250,35 @@ close_window :: proc "c" (e: ^ui.Event) {
 main :: proc() {
     database_context = LoadDatabase(Petition)
 
-    // Set the root folder for the UI.
-    ui.set_default_root_folder("views")
-
     // Prepare the main window.
     my_window: uint = ui.new_window()
 
     ui.set_runtime(my_window, .Bun)
 
     // Bind HTML elements to functions.
+    ui.bind(my_window, "getPetitions", get_petition_list_cb)
+    ui.bind(my_window, "newPetition", create_petition_cb)
+    ui.bind(my_window, "btn-test", test_msg)
     ui.bind(my_window, "switch-to-second-page", switch_to_second_page)
     ui.bind(my_window, "open-new-window", show_second_window)
     ui.bind(my_window, "exit", close_window)
     ui.bind(my_window, "", events) // Bind all events.
 
+    ui.set_config(.multi_client, true)
+    ui.set_config(.use_cookies, true)
+
+    // Set up custom file handler
+    build_virtual_file_system("./views/")
+    ui.set_file_handler(my_window, vfs)
+
     // Show the main window.
-    ui.show_browser(my_window, "index.html", .Chrome)
+    browser_number := ui.get_best_browser(my_window)
+    ui.show_browser(my_window, "index.html", ui.Browser(browser_number))
 
     // Wait until all windows get closed.
     ui.wait()
+
+    SaveDatabase()
     ui.clean()
 }
 
