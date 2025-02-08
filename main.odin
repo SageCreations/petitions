@@ -137,6 +137,9 @@ events :: proc "c" (e: ^ui.Event) {
     switch e.event_type {
     case .Connected:
         fmt.println("Connected.")
+        // TODO: trying to call js from backend, .ts being compiled to js files
+        ui.run(e.window, "hello();")
+        ui.script(e.window, "hello();")
     case .Disconnected:
         fmt.println("Disconnected.")
     case .MouseClick:
@@ -167,6 +170,7 @@ close_window :: proc "c" (e: ^ui.Event) {
     context = runtime.default_context()
     ui.close(e.window)
 }
+
 
 // ============================================================================
 
