@@ -4,11 +4,17 @@ import os
 import json
 import uuid
 import time
-
+import sys
 
 # Path to your local data folder
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'data')
 JSON_FILE = os.path.join(DATA_FOLDER, 'database.json')
+
+if getattr(sys, 'frozen', False):
+    # If the templates folder is inside _internal:
+    base_path = os.path.join(sys._MEIPASS)
+else:
+    base_path = os.path.abspath(".")
 
 
 def load_database() -> dict:
@@ -83,7 +89,7 @@ def render_template(template_name: str, **context) -> str:
     and returns the final rendered string.
     """
     # 1. Create a Jinja2 environment, pointing to the 'templates' directory
-    env = Environment(loader=FileSystemLoader('templates/'))
+    env = Environment(loader=FileSystemLoader(os.path.join(base_path, 'templates/')))
 
     # 2. Load the template
     template = env.get_template(template_name)
@@ -116,16 +122,15 @@ def edit_petition(e: webui.Event):
     petition['updated_at'] = time.time_ns()
     db_ctx[petition['id']] = petition
     update_database(db_ctx)
-
+    e.window.show(render_template("pages/dashboard.html", petition_data=load_database()))
 
 
 def dashboard_controller(w: webui.Window):
     # Render the dashboard template, passing in the petition data.
     rendered_html = render_template("pages/dashboard.html", petition_data=load_database())
 
-    # Show in browser - this assumes your framework provides this functionality.
-    # Replace `my_window.show_browser` and `webui.Browser.Firefox` with your actual calls.
-    w.show_browser(rendered_html, webui.Browser.Firefox)
+    # Show the window with whatever the best browser for the user is.
+    w.show_browser(rendered_html, w.get_best_browser())
 
 
 def main():
