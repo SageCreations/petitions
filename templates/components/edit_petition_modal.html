@@ -1,0 +1,28 @@
+<!-- edit_petition_modal.html -->
+<div class="modal fade" id="editPetitionModal" tabindex="-1" aria-labelledby="editPetitionModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 id="editPetitionModalLabel" class="modal-title">Edit Petition</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form id="edit-petition-form">
+					<!-- Hidden field to store the petition id -->
+					<input type="hidden" id="edit-petition-id">
+					<div class="mb-3">
+						<label for="edit-petition-name" class="form-label">Name</label>
+						<input type="text" id="edit-petition-name" class="form-control" required>
+					</div>
+					<div class="mb-3">
+						<label for="edit-petition-desc" class="form-label">Description</label>
+						<textarea id="edit-petition-desc" class="form-control" rows="3" required></textarea>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button id="btn-save-edit" type="button" class="btn btn-primary">Save Changes</button>
+			</div>
+		</div>
+	</div>
+</div>

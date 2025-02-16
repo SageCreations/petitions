@@ -1,0 +1,38 @@
+{% extends "base/index.html" %}
+
+{% block title %}
+  Dashboard
+{% endblock title %}
+
+{% block content %}
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center pb-3">
+            <h1>Petitions</h1>
+            <button id="btn-new-petition" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createPetitionModal" type="button">
+                New Petition
+            </button>
+        </div>
+
+        <!-- Scrollable container for the petitions -->
+        <div id="petition-container" class="overflow-auto border border-secondary rounded-2" style="max-height: 88vh;">
+            <!-- Petition cards will be dynamically injected here -->
+            {% from 'components/petition_card.html' import render_card %}
+            {% for petition in petition_data.values() %}
+                {{ render_card(petition) }}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Include the petition modal -->
+    {% include 'components/create_petition_modal.html' %}
+
+    <!-- Edit Petition Modal -->
+    {% include 'components/edit_petition_modal.html' %}
+
+
+{% endblock content %}
+
+
+{% block extra_scripts %}
+<!-- If you have extra scripts for this page, you can add them here -->
+{% endblock extra_scripts %}

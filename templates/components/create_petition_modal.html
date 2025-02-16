@@ -1,0 +1,41 @@
+<!-- create_petition_modal.html -->
+<div class="modal fade" id="createPetitionModal" tabindex="-1" aria-labelledby="createPetitionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="createPetitionModalLabel" class="modal-title">New Petition</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-petition-form">
+                    <div class="mb-3">
+                        <label for="create-petition-name" class="form-label">Name</label>
+                        <input type="text" id="create-petition-name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="create-petition-desc" class="form-label">Description</label>
+                        <textarea id="create-petition-desc" class="form-control" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button micropython-click="new_petition_handler" type="button" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script type="micropython">
+from js import document, webui
+
+def new_petition_handler(event):
+    # Get the values from the input fields:
+    name_val = document.getElementById("create-petition-name").value
+    desc_val = document.getElementById("create-petition-desc").value
+    # Call the backend function with the actual values:
+    webui.newPetition(name_val, desc_val)
+
+</script>
+{% endblock extra_scripts %}
+
